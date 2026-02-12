@@ -35,19 +35,18 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-// Brevo SMTP transporter (replaces Gmail)
 const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
-  port: Number(process.env.BREVO_SMTP_PORT) || 587,
-  secure: false,  // false for 587 (STARTTLS), true only if you switch to 465
+  host: 'smtp-relay.brevo.com',
+  port: 465,
+  secure: true,
   auth: {
-    user: EMAIL_USER,
+    user: process.env.BREVO_SMTP_USER,
     pass: process.env.BREVO_SMTP_PASS
   },
-  // Optional: for debugging
-  logger: true,
-  debug: true
+  logger: true,       // ← Add this
+  debug: true         // ← Add this for verbose logs
 });
+
 
 // Send confirmation email to user
 // Supports an optional custom message and extra context (e.g. preferred destination).
