@@ -32,14 +32,14 @@ const sendEmail = async ({ to, subject, html }) => {
 
     if (error) {
       console.error('Resend error:', error);
-      throw error;
+      return { success: false, error: JSON.stringify(error) };
     }
 
     console.log('Email sent successfully:', data?.id);
-    return true;
+    return { success: true, data };
   } catch (err) {
     console.error('Email sending failed:', err);
-    return false;
+    return { success: false, error: err.message };
   }
 };
 
