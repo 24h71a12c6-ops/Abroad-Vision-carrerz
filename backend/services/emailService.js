@@ -23,8 +23,8 @@ function escapeHtml(value) {
 const sendEmail = async ({ to, subject, html }) => {
   try {
     const { data, error } = await resend.emails.send({
-      from: 'Abroad Vision Carrerz <no-reply@your-verified-domain.com>', // ← change this after domain verify
-      // or test: 'onboarding@resend.dev' (works without domain verify)
+      from: 'onboarding@resend.dev', // Default Resend test domain
+      // or verified domain: 'Abroad Vision Carrerz <no-reply@your-verified-domain.com>'
       to,
       subject,
       html,
