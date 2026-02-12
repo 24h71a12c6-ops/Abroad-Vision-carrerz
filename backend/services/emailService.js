@@ -24,7 +24,6 @@ const sendEmail = async ({ to, subject, html }) => {
   try {
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Default Resend test domain
-      // or verified domain: 'Abroad Vision Carrerz <no-reply@your-verified-domain.com>'
       to,
       subject,
       html,
@@ -35,7 +34,7 @@ const sendEmail = async ({ to, subject, html }) => {
       return { success: false, error: JSON.stringify(error) };
     }
 
-    console.log('Email sent successfully:', data?.id);
+    console.log(`✅ Email sent successfully to ${to}. ID:`, data?.id);
     return { success: true, data };
   } catch (err) {
     console.error('Email sending failed:', err);
