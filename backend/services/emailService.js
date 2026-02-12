@@ -19,12 +19,11 @@ function normalizeEmailPassword(value) {
   }
   return trimmed;
 }
-
-const EMAIL_USER = normalizeEmailUser(process.env.EMAIL_USER);
-const EMAIL_PASSWORD = normalizeEmailPassword(process.env.EMAIL_PASSWORD);
+const EMAIL_USER = normalizeEmailUser(process.env.BREVO_SMTP_USER || process.env.EMAIL_USER);
+const EMAIL_PASSWORD = normalizeEmailPassword(process.env.BREVO_SMTP_PASS || process.env.EMAIL_PASSWORD);
 
 if (!EMAIL_USER || !EMAIL_PASSWORD) {
-  console.warn('⚠️ Email ENV variables missing (EMAIL_USER / EMAIL_PASSWORD). Password reset emails will not send.');
+  console.warn('⚠️ Email ENV variables missing (BREVO_SMTP_USER / BREVO_SMTP_PASS). Password reset emails will not send.');
 }
 
 function escapeHtml(value) {
@@ -36,13 +35,18 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-// Gmail SMTP transporter
+// Brevo SMTP transporter (replaces Gmail)
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.BREVO_SMTP_HOST || 'smtp-relay.brevo.com',
+  port: Number(process.env.BREVO_SMTP_PORT) || 587,
+  secure: false,  // false for 587 (STARTTLS), true only if you switch to 465
   auth: {
     user: EMAIL_USER,
-    pass: EMAIL_PASSWORD
-  }
+    pass: process.env.BREVO_SMTP_PASS
+  },
+  // Optional: for debugging
+  logger: true,
+  debug: true
 });
 
 // Send confirmation email to user
