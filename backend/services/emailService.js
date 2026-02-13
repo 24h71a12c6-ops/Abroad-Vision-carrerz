@@ -1,11 +1,50 @@
-const { Resend } = require('resend');
 
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const nodemailer = require('nodemailer');
+// Nodemailer Gmail Transport
+const gmailTransport = nodemailer.createTransport({
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-if (!resendApiKey) {
-  console.warn('⚠️ RESEND_API_KEY missing. Emails will not send.');
-}
+const sendGmail = async ({ to, subject, html }) => {
+  try {
+    const info = await gmailTransport.sendMail({
+      from: process.env.EMAIL_USER,
+      to,
+      subject,
+      html,
+    });
+    console.log(`✅ Gmail sent to ${to}:`, info.messageId);
+    return { success: true, info };
+  } catch (err) {
+    console.error('Gmail send error:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+// Send login code (OTP) via Gmail
+const sendLoginCodeEmail = async (userEmail, code) => {
+  const html = `
+    <h2>Login Verification Code</h2>
+    <p>Use this code to log in:</p>
+    <div style="font-size: 28px; font-weight: 800; letter-spacing: 4px; padding: 12px 16px; background: #f3f4f6; display: inline-block; border-radius: 10px;">${escapeHtml(code)}</div>
+    <p style="margin-top: 16px; color: #555;">This code will expire in 10 minutes.</p>
+    <p style="color: #777; font-size: 12px;">If you did not request this, ignore this email.</p>
+  `;
+  return await sendGmail({
+    to: userEmail,
+    subject: 'Your Login Verification Code',
+    html,
+  });
+};
+
+
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -16,32 +55,8 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-const sendEmail = async ({ to, subject, html }) => {
-  if (!resend) {
-    console.error('Resend client not configured (no API key).');
-    return { success: false, error: 'Missing RESEND_API_KEY' };
-  }
-
-  try {
-    const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', // default test sender
-      to,
-      subject,
-      html,
-    });
-
-    if (error) {
-      console.error('Resend error:', error);
-      return { success: false, error: JSON.stringify(error) };
-    }
-
-    console.log(`✅ Email sent successfully to ${to}. ID:`, data?.id);
-    return { success: true, data };
-  } catch (err) {
-    console.error('Email sending failed:', err);
-    return { success: false, error: err.message };
-  }
-};
+// Use Gmail for all email sending
+const sendEmail = sendGmail;
 
 // User confirmation email
 const sendConfirmationEmail = async (userEmail, userName, customMessage, extra = {}) => {
@@ -81,7 +96,7 @@ const sendConfirmationEmail = async (userEmail, userName, customMessage, extra =
       <p style="color: #666; font-size: 12px;">Guiding Futures Beyond Borders</p>
     `;
 
-    return await sendEmail({
+    return await sendGmail({
       to: userEmail,
       subject: 'Abroad Vision Carrerz - Registration Successful',
       html,
@@ -122,7 +137,7 @@ const sendAdminEmail = async (user) => {
       process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(Boolean) ||
       ['admin@example.com'];
 
-    return await sendEmail({
+    return await sendGmail({
       to: adminList,
       subject: `New Registration: ${user?.fullName || user?.email || 'New Lead'}`,
       html,
@@ -143,7 +158,7 @@ const sendPasswordResetCodeEmail = async (userEmail, code) => {
     <p style="color: #777; font-size: 12px;">If you did not request a password reset, ignore this email.</p>
   `;
 
-  return await sendEmail({
+  return await sendGmail({
     to: userEmail,
     subject: 'Abroad Vision Carrerz - Password Reset Code',
     html,
@@ -164,7 +179,7 @@ const sendPasswordChangedEmail = async (userEmail, userName) => {
     <p style="color: #666; font-size: 12px;">Guiding Futures Beyond Borders</p>
   `;
 
-  return await sendEmail({
+  return await sendGmail({
     to: userEmail,
     subject: 'Abroad Vision Carrerz - Password Changed',
     html,
@@ -176,4 +191,5 @@ module.exports = {
   sendAdminEmail,
   sendPasswordResetCodeEmail,
   sendPasswordChangedEmail,
+  sendLoginCodeEmail,
 };
