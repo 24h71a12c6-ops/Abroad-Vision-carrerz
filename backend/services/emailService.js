@@ -1,51 +1,21 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Ee line top lo kachithanga undali
+require('dotenv').config();
 
+// 1. Transporter Setup
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
   }
 });
 
-
-/**
- * Common function to send emails
- */
-const sendGmail = async ({ to, subject, html }) => {
-  try {
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to,
-      subject,
-      html,
-    });
-    console.log('✅ Gmail sent to ' + to + ':', info.messageId);
-    return info;
-  } catch (error) {
-    console.error('❌ Gmail send error:', error);
-    throw error;
-  }
-};
-// Send login code (OTP) via Gmail
-const sendLoginCodeEmail = async (userEmail, code) => {
-  const html = `
-    <h2>Login Verification Code</h2>
-    <p>Use this code to log in:</p>
-    <div style="font-size: 28px; font-weight: 800; letter-spacing: 4px; padding: 12px 16px; background: #f3f4f6; display: inline-block; border-radius: 10px;">${escapeHtml(code)}</div>
-    <p style="margin-top: 16px; color: #555;">This code will expire in 10 minutes.</p>
-    <p style="color: #777; font-size: 12px;">If you did not request this, ignore this email.</p>
-  `;
-  return await sendGmail({
-    to: userEmail,
-    subject: 'Your Login Verification Code',
-    html,
-  });
-};
-
-
-
+// Helper to escape HTML (Security purpose)
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -54,6 +24,40 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+// 2. Single Function to Send OTP (Ikkada okkate undi chudu)
+const sendLoginCodeEmail = async (userEmail, code) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+      <h2>Login Verification Code</h2>
+      <p>Use this code to log in:</p>
+      <div style="font-size: 28px; font-weight: 800; letter-spacing: 4px; padding: 12px 16px; background: #f3f4f6; display: inline-block; border-radius: 10px;">
+        ${escapeHtml(code)}
+      </div>
+      <p style="margin-top: 16px; color: #555;">This code will expire in 10 minutes.</p>
+      <p style="color: #777; font-size: 12px;">If you did not request this, ignore this email.</p>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: userEmail,
+    subject: 'Your Login Verification Code',
+    html: html
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully:', info.response);
+    return info;
+  } catch (error) {
+    console.error('❌ Render Email Error:', error);
+    throw error;
+  }
+};
+
+// 3. Export the function
+module.exports = { sendLoginCodeEmail };
 
 // Use Gmail for all email sending
 const sendEmail = sendGmail;
