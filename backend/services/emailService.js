@@ -25,7 +25,7 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-// 2. The Main Function (Fixed the sendGmail error here)
+// 2. The Final Function (Fixed: Direct Transporter usage)
 const sendLoginCodeEmail = async (userEmail, code) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
@@ -46,16 +46,17 @@ const sendLoginCodeEmail = async (userEmail, code) => {
   };
 
   try {
-    // Ikkada direct ga transporter vaduthunnam, so 'sendGmail not defined' error raadu
+    // Ikkada transporter thoti direct ga pampisthunnam
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Success! Email sent to ' + userEmail);
+    console.log('✅ Email sent successfully to ' + userEmail);
     return info;
   } catch (error) {
-    console.error('❌ Render Email Error:', error);
+    console.error('❌ Email Error:', error);
     throw error;
   }
 };
 
+// 3. Export Only This Function
 module.exports = { sendLoginCodeEmail };
 
 // Use Gmail for all email sending
