@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Helper to escape HTML (Security purpose)
+// Helper to escape HTML
 function escapeHtml(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -25,7 +25,7 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-// 2. Single Function to Send OTP (Ikkada okkate undi chudu)
+// 2. The Main Function (Fixed the sendGmail error here)
 const sendLoginCodeEmail = async (userEmail, code) => {
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
@@ -35,7 +35,6 @@ const sendLoginCodeEmail = async (userEmail, code) => {
         ${escapeHtml(code)}
       </div>
       <p style="margin-top: 16px; color: #555;">This code will expire in 10 minutes.</p>
-      <p style="color: #777; font-size: 12px;">If you did not request this, ignore this email.</p>
     </div>
   `;
 
@@ -47,8 +46,9 @@ const sendLoginCodeEmail = async (userEmail, code) => {
   };
 
   try {
+    // Ikkada direct ga transporter vaduthunnam, so 'sendGmail not defined' error raadu
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.response);
+    console.log('✅ Success! Email sent to ' + userEmail);
     return info;
   } catch (error) {
     console.error('❌ Render Email Error:', error);
@@ -56,7 +56,6 @@ const sendLoginCodeEmail = async (userEmail, code) => {
   }
 };
 
-// 3. Export the function
 module.exports = { sendLoginCodeEmail };
 
 // Use Gmail for all email sending
