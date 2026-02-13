@@ -1,7 +1,6 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// 1. Transporter Setup
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
@@ -15,40 +14,22 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Helper to escape HTML
 function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-// 2. The Final Function (Fixed: Direct Transporter usage)
 const sendLoginCodeEmail = async (userEmail, code) => {
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-      <h2>Login Verification Code</h2>
-      <p>Use this code to log in:</p>
-      <div style="font-size: 28px; font-weight: 800; letter-spacing: 4px; padding: 12px 16px; background: #f3f4f6; display: inline-block; border-radius: 10px;">
-        ${escapeHtml(code)}
-      </div>
-      <p style="margin-top: 16px; color: #555;">This code will expire in 10 minutes.</p>
-    </div>
-  `;
-
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: userEmail,
     subject: 'Your Login Verification Code',
-    html: html
+    html: `<h2>Login Code: ${escapeHtml(code)}</h2><p>Expires in 10 mins.</p>`
   };
 
   try {
-    // Ikkada transporter thoti direct ga pampisthunnam
+    // IKKADA CHUDU: 'sendGmail' badulu 'transporter.sendMail' vadali
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully to ' + userEmail);
+    console.log('✅ Email sent:', info.response);
     return info;
   } catch (error) {
     console.error('❌ Email Error:', error);
@@ -56,7 +37,6 @@ const sendLoginCodeEmail = async (userEmail, code) => {
   }
 };
 
-// 3. Export Only This Function
 module.exports = { sendLoginCodeEmail };
 
 // Use Gmail for all email sending
