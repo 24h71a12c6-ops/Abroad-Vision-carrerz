@@ -1,16 +1,11 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-  console.warn('⚠️ EMAIL_USER or EMAIL_PASSWORD missing. Emails will not send.');
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+if (!resendApiKey) {
+  console.warn('⚠️ RESEND_API_KEY missing. Emails will not send.');
 }
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD, // Gmail app password
-  },
-});
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -22,16 +17,26 @@ function escapeHtml(value) {
 }
 
 const sendEmail = async ({ to, subject, html }) => {
+  if (!resend) {
+    console.error('Resend client not configured (no API key).');
+    return { success: false, error: 'Missing RESEND_API_KEY' };
+  }
+
   try {
-    const info = await transporter.sendMail({
-      from: `"Abroad Vision Carrerz" <${process.env.EMAIL_USER}>`,
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev', // default test sender
       to,
       subject,
       html,
     });
 
-    console.log(`✅ Email sent successfully to ${to}. ID:`, info.messageId);
-    return { success: true, data: info };
+    if (error) {
+      console.error('Resend error:', error);
+      return { success: false, error: JSON.stringify(error) };
+    }
+
+    console.log(`✅ Email sent successfully to ${to}. ID:`, data?.id);
+    return { success: true, data };
   } catch (err) {
     console.error('Email sending failed:', err);
     return { success: false, error: err.message };
@@ -87,7 +92,7 @@ const sendConfirmationEmail = async (userEmail, userName, customMessage, extra =
   }
 };
 
-// Admin notification
+// Admin notification email
 const sendAdminEmail = async (user) => {
   try {
     const rows = [];
@@ -115,7 +120,6 @@ const sendAdminEmail = async (user) => {
 
     const adminList =
       process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(Boolean) ||
-      process.env.ADMIN_EMAIL?.split(',').map(e => e.trim()).filter(Boolean) ||
       ['admin@example.com'];
 
     return await sendEmail({
