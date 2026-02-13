@@ -1,36 +1,33 @@
-
 const nodemailer = require('nodemailer');
-// Nodemailer Gmail Transport
-const gmailTransport = nodemailer.createTransport({
+require('dotenv').config(); // Ee line kachithanga top lo undali
+
+// Transporter setup using environment variables
+const transporter = nodemailer.createTransport({
   service: 'gmail',
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // SSL
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
+    pass: process.env.EMAIL_PASS
   }
 });
 
+/**
+ * Common function to send emails
+ */
 const sendGmail = async ({ to, subject, html }) => {
   try {
-    const info = await gmailTransport.sendMail({
+    const info = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to,
       subject,
       html,
     });
-    console.log(`✅ Gmail sent to ${to}:`, info.messageId);
-    return { success: true, info };
-  } catch (err) {
-    console.error('Gmail send error:', err);
-    return { success: false, error: err.message };
+    console.log('✅ Gmail sent to ' + to + ':', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Gmail send error:', error);
+    throw error;
   }
 };
-
 // Send login code (OTP) via Gmail
 const sendLoginCodeEmail = async (userEmail, code) => {
   const html = `
