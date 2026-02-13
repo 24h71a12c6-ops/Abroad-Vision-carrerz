@@ -1,7 +1,8 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config(); // Ee line kachithanga top lo undali
+const nodemailer = require('nodemailer');
+require('dotenv').config(); // Ee line file top lo kachithanga undali
 
-// Transporter setup using environment variables
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -9,6 +10,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
+
 
 /**
  * Common function to send emails
