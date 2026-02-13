@@ -1,7 +1,5 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Ee line kachithanga top lo undali
-const nodemailer = require('nodemailer');
-require('dotenv').config(); // Ee line file top lo kachithanga undali
+require('dotenv').config(); // Ee line top lo kachithanga undali
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
