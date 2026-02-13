@@ -1,14 +1,16 @@
-// utils/email.js  (or wherever this file is)
+const nodemailer = require('nodemailer');
 
-require('dotenv').config();  // if not already loading .env
-
-const { Resend } = require('resend');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-if (!process.env.RESEND_API_KEY) {
-  console.warn('⚠️ RESEND_API_KEY missing. Emails will not send.');
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  console.warn('⚠️ EMAIL_USER or EMAIL_PASSWORD missing. Emails will not send.');
 }
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD, // Gmail app password
+  },
+});
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -19,30 +21,24 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-// Helper to send email with Resend
 const sendEmail = async ({ to, subject, html }) => {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', // Default Resend test domain
+    const info = await transporter.sendMail({
+      from: `"Abroad Vision Carrerz" <${process.env.EMAIL_USER}>`,
       to,
       subject,
       html,
     });
 
-    if (error) {
-      console.error('Resend error:', error);
-      return { success: false, error: JSON.stringify(error) };
-    }
-
-    console.log(`✅ Email sent successfully to ${to}. ID:`, data?.id);
-    return { success: true, data };
+    console.log(`✅ Email sent successfully to ${to}. ID:`, info.messageId);
+    return { success: true, data: info };
   } catch (err) {
     console.error('Email sending failed:', err);
     return { success: false, error: err.message };
   }
 };
 
-// Send confirmation email to user
+// User confirmation email
 const sendConfirmationEmail = async (userEmail, userName, customMessage, extra = {}) => {
   try {
     const safeName = escapeHtml(userName || '');
@@ -91,7 +87,7 @@ const sendConfirmationEmail = async (userEmail, userName, customMessage, extra =
   }
 };
 
-// Send admin notification
+// Admin notification
 const sendAdminEmail = async (user) => {
   try {
     const rows = [];
@@ -117,8 +113,13 @@ const sendAdminEmail = async (user) => {
       <p>Please follow up with this student.</p>
     `;
 
+    const adminList =
+      process.env.ADMIN_EMAILS?.split(',').map(e => e.trim()).filter(Boolean) ||
+      process.env.ADMIN_EMAIL?.split(',').map(e => e.trim()).filter(Boolean) ||
+      ['admin@example.com'];
+
     return await sendEmail({
-      to: process.env.ADMIN_EMAILS?.split(',') || 'admin@yourdomain.com',
+      to: adminList,
       subject: `New Registration: ${user?.fullName || user?.email || 'New Lead'}`,
       html,
     });
