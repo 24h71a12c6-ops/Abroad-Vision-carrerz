@@ -1,3 +1,6 @@
+const nodemailer = require('nodemailer');
+require('dotenv').config(); // Local ga .env file nundi values ravadaniki idi chala mukhyam
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   host: 'smtp.gmail.com',
