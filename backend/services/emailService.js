@@ -1,19 +1,18 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
-
 const transporter = nodemailer.createTransport({
+  service: 'gmail',
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, 
+  secure: true, // Use SSL/TLS
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS, // jtbdyezmjlsqbxin idi Render dashboard lo pettu
+    // Spaces lekunda 16-digit app password
+    pass: process.env.EMAIL_PASS, 
   },
   tls: {
-    rejectUnauthorized: false
+    // Render nundi security handshake fail avvakunda idi help chesthundhi
+    rejectUnauthorized: false 
   }
 });
-
 function escapeHtml(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
