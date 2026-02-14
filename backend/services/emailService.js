@@ -39,8 +39,8 @@ const sendLoginCodeEmail = async (userEmail, code) => {
 
 module.exports = { sendLoginCodeEmail };
 
-// Use Gmail for all email sending
-const sendEmail = sendGmail;
+// Line 43 daggara 
+const sendEmail = transporter.sendMail.bind(transporter);
 
 // User confirmation email
 const sendConfirmationEmail = async (userEmail, userName, customMessage, extra = {}) => {
