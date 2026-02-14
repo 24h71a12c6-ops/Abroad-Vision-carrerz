@@ -1,21 +1,28 @@
+require('dotenv').config();
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Local ga .env file nundi values ravadaniki idi chala mukhyam
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // Use SSL/TLS
+  secure: true, // true for port 465, false for 587
   auth: {
     user: process.env.EMAIL_USER,
-    // Spaces lekunda 16-digit app password
-    pass: process.env.EMAIL_PASS, 
+    pass: process.env.EMAIL_PASSWORD // Use EMAIL_PASSWORD for Gmail App Password
   },
   tls: {
-    // Render nundi security handshake fail avvakunda idi help chesthundhi
-    rejectUnauthorized: false 
+    rejectUnauthorized: false // Allow self-signed certificates (not recommended for production)
   }
 });
+
+// Test connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('Transporter error:', error);
+  } else {
+    console.log('Server is ready to send emails!');
+  }
+});
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
